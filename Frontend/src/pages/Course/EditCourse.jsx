@@ -15,6 +15,7 @@ import {
   AlertCircle,
   X
 } from "lucide-react";
+import BACK_URL from "../../api";
 
 export default function EditCourse() {
   const { id } = useParams();
@@ -46,7 +47,7 @@ export default function EditCourse() {
 
     if (token) {
       axios
-        .get("/api/auth/me", {
+        .get(`${BACK_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => {
@@ -61,7 +62,7 @@ export default function EditCourse() {
 
     setLoading(true);
     axios
-      .get(`/api/courses/${id}`, {
+      .get(`${BACK_URL}/api/courses/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -90,7 +91,7 @@ export default function EditCourse() {
 
     try {
       await axios.put(
-        `/api/courses/${id}`,
+        `${BACK_URL}/api/courses/${id}`,
         editData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -127,7 +128,7 @@ export default function EditCourse() {
 
     try {
       setUploadStatus("uploading");
-      await axios.post(`/api/courses/${id}/videos`, formData, {
+      await axios.post(`${BACK_URL}/api/courses/${id}/videos`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -158,7 +159,7 @@ export default function EditCourse() {
 
   // Handle cancel button
   const handleCancel = () => {
-    navigate(`/courses/${id}`);
+    navigate(`${BACK_URL}/courses/${id}`);
   };
 
   // Handle input change
@@ -176,7 +177,7 @@ export default function EditCourse() {
 
   const handlePublish = async () => {
     try {
-      await axios.patch(`/api/courses/${id}/publish`, {}, {
+      await axios.patch(`${BACK_URL}/api/courses/${id}/publish`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Course published successfully!');
@@ -187,7 +188,7 @@ export default function EditCourse() {
   };
 
   const handleAnalytics = () => {
-    navigate(`/courses/${id}/analytics`);
+    navigate(`${BACK_URL}/courses/${id}/analytics`);
   };
 
   if (loading) {

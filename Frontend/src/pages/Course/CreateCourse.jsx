@@ -15,6 +15,7 @@ import {
   Tag,
   IndianRupee
 } from "lucide-react";
+import BACK_URL from "../../api";
 
 export default function CreateCourse() {
   const [form, setForm] = useState({ 
@@ -37,7 +38,7 @@ export default function CreateCourse() {
   }, []);
 
   const fetchCourses = () => {
-    axios.get("/api/courses", { headers: { Authorization: `Bearer ${token}` } })
+    axios.get(`${BACK_URL}/api/courses`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => setCourses(res.data))
       .catch(err => console.error(err));
   };
@@ -70,7 +71,7 @@ export default function CreateCourse() {
       formData.append("isFree", form.isFree);
       formData.append("thumbnail", form.thumbnail);
 
-      const courseRes = await axios.post("/api/courses", formData, {
+      const courseRes = await axios.post(`${BACK_URL}/api/courses`, formData, {
         headers: { 
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`
@@ -86,7 +87,7 @@ export default function CreateCourse() {
         const titles = videoFiles.map(file => file.name);
         videoData.append("titles", JSON.stringify(titles));
 
-        await axios.post(`/api/courses/${courseId}/videos`, videoData, {
+        await axios.post(`${BACK_URL}/api/courses/${courseId}/videos`, videoData, {
           headers: { 
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`

@@ -14,6 +14,7 @@ import {
   Home,
   User,
 } from "lucide-react";
+import BACK_URL from "../api";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -30,7 +31,7 @@ export default function Navbar() {
   useEffect(() => {
     if (token) {
       axios
-        .get("/api/auth/me", {
+        .get(`${BACK_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => setUser(res.data.user))

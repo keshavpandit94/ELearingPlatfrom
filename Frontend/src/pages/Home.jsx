@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import BACK_URL from "../api";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ export default function Home() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      axios.get("/api/auth/me", {
+      axios.get(`${BACK_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then((res) => {
@@ -34,7 +35,7 @@ export default function Home() {
         .catch((err) => console.error("Error fetching user:", err));
     }
 
-    axios.get("/api/courses")
+    axios.get(`${BACK_URL}/api/courses`)
       .then((res) => setCourses(res.data))
       .catch((err) => console.error("Error fetching courses:", err));
 

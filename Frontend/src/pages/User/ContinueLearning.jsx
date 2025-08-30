@@ -6,6 +6,7 @@ import {
   Star, Download, Settings, List, Trophy, Target
 } from "lucide-react";
 import { useParams } from "react-router-dom";
+import BACK_URL from "../../api";
 
 export default function ContinueLearning() {
   const { courseId } = useParams()
@@ -30,7 +31,7 @@ export default function ContinueLearning() {
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`/api/courses/${courseId}`, {
+      .get(`${BACK_URL}/api/courses/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then((res) => {
@@ -46,7 +47,7 @@ export default function ContinueLearning() {
       });
     
     axios
-      .get(`/api/progress/${courseId}`, {
+      .get(`${BACK_URL}/api/progress/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then((res) => {
@@ -70,7 +71,7 @@ export default function ContinueLearning() {
 
     axios
       .post(
-        "/api/progress/update",
+        `${BACK_URL}/api/progress/update`,
         { courseId, lessonId, percent },
         { headers: { Authorization: `Bearer ${token}` } }
       )

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { BookOpen, User, GraduationCap, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import BACK_URL from "../../api";
 
 export default function MyCourses() {
   const [courses, setCourses] = useState([]);
@@ -17,7 +18,7 @@ export default function MyCourses() {
     setError(null);
 
     axios
-      .get("/api/enrollments/my-courses", {
+      .get(`${BACK_URL}/api/enrollments/my-courses`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {

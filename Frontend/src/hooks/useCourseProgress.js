@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import axios from "axios";
+import BACK_URL from "../api";
 
 export default function useCourseProgress(courseId, { token, userId } = {}) {
   const [course, setCourse] = useState(null);
@@ -18,10 +19,10 @@ export default function useCourseProgress(courseId, { token, userId } = {}) {
     setLoading(true);
 
     Promise.all([
-      axios.get(`/api/courses/${courseId}`, {
+      axios.get(`${BACK_URL}/api/courses/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` },
       }),
-      axios.get(`/api/progress/${courseId}`, {
+      axios.get(`${BACK_URL}/api/progress/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` },
       }),
     ])
@@ -104,7 +105,7 @@ export default function useCourseProgress(courseId, { token, userId } = {}) {
 
       axios
         .post(
-          "/api/progress/update",
+          `${BACK_URL}/api/progress/update`,
           { courseId, videoId, progress: cleanPercent, lastTimestamp: cleanTimestamp },
           { headers: { Authorization: `Bearer ${token}` } }
         )

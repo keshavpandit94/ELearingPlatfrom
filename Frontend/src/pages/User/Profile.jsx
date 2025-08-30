@@ -4,6 +4,7 @@ import {
   User, Mail, Shield, Edit3, Save, X, UserCircle2,
   Loader2, GraduationCap, BookOpen, Trash2, AlertTriangle
 } from "lucide-react";
+import BACK_URL from "../../api";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -17,7 +18,7 @@ const Profile = () => {
   useEffect(() => {
     if (!token) return;
     axios
-      .get("/api/auth/me", {
+      .get(`${BACK_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -41,7 +42,7 @@ const Profile = () => {
   // Save updates to backend
   const handleSave = () => {
     axios
-      .put("/api/auth/me", form, {
+      .put(`${BACK_URL}/api/auth/me`, form, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -61,7 +62,7 @@ const Profile = () => {
       return;
     }
     axios
-      .delete("/api/auth/me", {
+      .delete(`${BACK_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {

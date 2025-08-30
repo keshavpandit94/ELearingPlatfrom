@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import BACK_URL from "../api";
 
 export default function useEnroll({ token, user, courseId }) {
   const [loading, setLoading] = useState(false);
@@ -13,7 +14,7 @@ export default function useEnroll({ token, user, courseId }) {
   const checkEnrollment = useCallback(async () => {
     if (!token || !courseId) return;
     try {
-      const res = await axios.get("/api/enrollments/my-courses", {
+      const res = await axios.get(`${BACK_URL}/api/enrollments/my-courses`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // console.log(res.data[0].course)
@@ -71,7 +72,7 @@ export default function useEnroll({ token, user, courseId }) {
           handler: async (response) => {
             try {
               const verifyRes = await axios.post(
-                "/api/enrollments/verify",
+                `${BACK_URL}/api/enrollments/verify`,
                 {
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_payment_id: response.razorpay_payment_id,

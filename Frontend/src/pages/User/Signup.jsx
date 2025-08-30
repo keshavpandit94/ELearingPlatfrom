@@ -12,6 +12,7 @@ import {
   EyeOff,
   ArrowRightCircle
 } from "lucide-react";
+import BACK_URL from "../../api";
 
 export default function Signup() {
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "student" });
@@ -22,7 +23,7 @@ export default function Signup() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    axios.post("/api/auth/signup", form)
+    axios.post(`${BACK_URL}/api/auth/signup`, form)
       .then((res) => {
         alert("Signup successful!");
         navigate("/login");

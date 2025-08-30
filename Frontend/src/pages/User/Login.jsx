@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
+import BACK_URL from "../../api";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -15,7 +16,7 @@ export default function Login() {
     e.preventDefault();
 
     axios
-      .post("/api/auth/login", form)
+      .post(`${BACK_URL}/api/auth/login`, form)
       .then((res) => {
         localStorage.setItem("token", res.data.token);
         alert("Login successful!");

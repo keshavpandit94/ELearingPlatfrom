@@ -7,6 +7,7 @@ import {
   Award, Eye
 } from "lucide-react";
 import useEnroll from "../../hooks/useEnroll"; 
+import BACK_URL from "../../api";
 
 export default function Courses() {
   const [courses, setCourses] = useState([]);
@@ -29,7 +30,7 @@ export default function Courses() {
     else{
       // fetch user info
       axios
-      .get("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
+      .get(`${BACK_URL}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => {
         setUser(res.data.user);
         localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -42,7 +43,7 @@ export default function Courses() {
 
     // fetch enrolled courses
     axios
-      .get("/api/enrollments/my-courses", {
+      .get(`${BACK_URL}/api/enrollments/my-courses`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -55,7 +56,7 @@ export default function Courses() {
 
    // fetch all courses
     axios
-      .get("/api/courses", {
+      .get(`${BACK_URL}/api/courses`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {

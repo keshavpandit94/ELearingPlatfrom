@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import EnrollButton from "../../components/EnrollButton";
 import useEnroll from "../../hooks/useEnroll"; // ✅ new reusable hook
+import BACK_URL from "../../api";
 
 export default function CourseDetails() {
   const { id } = useParams(); // course ID from URL
@@ -43,7 +44,7 @@ export default function CourseDetails() {
     } else {
       // ✅ Get logged-in user
       axios
-        .get("/api/auth/me", {
+        .get(`${BACK_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => {
@@ -59,7 +60,7 @@ export default function CourseDetails() {
 
     // ✅ Fetch course details
     axios
-      .get(`/api/courses/${id}`, {
+      .get(`${BACK_URL}/api/courses/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
