@@ -11,7 +11,7 @@ const razorpay = new Razorpay({
 
 // Enroll in course (free OR paid)
 export const enrollInCourse = async (req, res) => {
-  try {
+    try {
     const { courseId } = req.body;
     if (!courseId) return res.status(400).json({ message: "Course ID is required" });
 
@@ -23,9 +23,11 @@ export const enrollInCourse = async (req, res) => {
       return res.status(403).json({ message: "Instructors cannot enroll in their own course" });
     }
 
-    // Already enrolled?
-    const existing = await Enrollment.findOne({ student: req.user._id, course: courseId });
-    if (existing) return res.status(400).json({ message: "Already enrolled" });
+    // Already fully enrolled?
+    const existing = await Enrollment.findOne({ student: req.user._id, course: courseId, status: "enrolled" });
+    if (existing) {
+      return res.status(400).json({ message: "Already enrolled" });
+    }
 
     // Free course → enroll immediately
     if (!course.discountPrice || course.discountPrice === 0) {
@@ -37,14 +39,15 @@ export const enrollInCourse = async (req, res) => {
       return res.status(201).json({ message: "Enrolled successfully", enroll });
     }
 
+    // Check for existing cancelled enrollment
+    let enrollment = await Enrollment.findOne({ student: req.user._id, course: courseId, status: "cancelled" });
+
     // Paid course → create Razorpay order
-    const options = {
+    const order = await razorpay.orders.create({
       amount: course.discountPrice * 100,
       currency: "INR",
       receipt: `receipt_${Date.now()}`.slice(0, 40),
-    };
-
-    const order = await razorpay.orders.create(options);
+    });
 
     const payment = await Payment.create({
       student: req.user._id,
@@ -55,19 +58,27 @@ export const enrollInCourse = async (req, res) => {
       status: "created",
     });
 
-    await Enrollment.create({
-      student: req.user._id,
-      course: courseId,
-      payment: payment._id,
-      status: "pending",
-    });
+    if (enrollment) {
+      // 🔄 Reuse existing cancelled enrollment
+      enrollment.status = "pending";
+      enrollment.payment = payment._id;
+      await enrollment.save();
+    } else {
+      // 🆕 Create new one
+      enrollment = await Enrollment.create({
+        student: req.user._id,
+        course: courseId,
+        payment: payment._id,
+        status: "pending",
+      });
+    }
 
     res.status(200).json({
       message: "Payment required",
       courseId,
       price: course.discountPrice,
       orderId: order.id,
-      key: process.env.RAZORPAY_KEY, // ✅ send key to frontend
+      key: process.env.RAZORPAY_KEY,
       prefill: {
         name: req.user.name,
         email: req.user.email,
@@ -152,3 +163,38 @@ export const getMyCourses = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// Mark payment as failed and cancel enrollment
+export const paymentFailed = async (req, res) => {
+  try {
+    const { orderId, courseId } = req.body;
+    const studentId = req.user._id; // Assuming auth middleware attaches user
+
+    if (!orderId || !courseId) {
+      return res.status(400).json({ message: "orderId and courseId are required" });
+    }
+
+    // Find the payment record
+    const payment = await Payment.findOne({ orderId, course: courseId, student: studentId });
+    if (!payment) {
+      return res.status(404).json({ message: "Payment record not found" });
+    }
+
+    // Update payment status to 'failed'
+    payment.status = "failed";
+    await payment.save();
+
+    // Find related enrollment and update to 'cancelled' if pending
+    const enrollment = await Enrollment.findOne({ student: studentId, course: courseId });
+    if (enrollment && enrollment.status === "pending") {
+      enrollment.status = "cancelled";
+      await enrollment.save();
+    }
+
+    return res.json({ message: "Payment marked as failed and enrollment cancelled." });
+  } catch (err) {
+    console.error("paymentFailed error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+

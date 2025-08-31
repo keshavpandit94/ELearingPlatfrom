@@ -5,28 +5,20 @@ import BACK_URL from "../api";
 export default function useEnroll({ token, user, courseId }) {
   const [loading, setLoading] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
-    // const token2 = localStorage.getItem("token");
-    // console.log(token2)
-    // console.log(token) //okay
-    // console.log(user) //okay
-    // console.log(courseId) // okay data fetch 
-  // 🔹 Reusable enrollment check function
+
   const checkEnrollment = useCallback(async () => {
     if (!token || !courseId) return;
     try {
       const res = await axios.get(`${BACK_URL}/api/enrollments/my-courses`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // console.log(res.data[0].course)
       const enrolledCourses = res.data[0]?.course || [];
-      if (enrolledCourses._id === courseId) setIsEnrolled(true)
+      if (enrolledCourses._id === courseId && enrolledCourses.status ==="enrolled" ) setIsEnrolled(true);
     } catch (err) {
       console.error("Enrollment check failed:", err);
     }
   }, [token, courseId]);
 
-  // console.log(isEnrolled)
-  // 🔹 Run check on mount & whenever course/token changes
   useEffect(() => {
     checkEnrollment();
   }, [checkEnrollment]);
@@ -38,6 +30,8 @@ export default function useEnroll({ token, user, courseId }) {
     }
 
     setLoading(true);
+ 
+    console.log("enroll hit")
 
     try {
       // Step 1: Attempt enrollment
@@ -48,27 +42,31 @@ export default function useEnroll({ token, user, courseId }) {
       );
 
       const data = res.data;
-      // console.log(data)
 
       // Free course → directly enrolled
       if (data.message === "Enrolled successfully") {
         alert("✅ Enrolled in free course!");
-        await checkEnrollment(); // refresh enrollment
+        await checkEnrollment();
         setLoading(false);
         return;
       }
 
       // Paid course → Razorpay
       if (data.message === "Payment required") {
-        const { orderId, amount, currency, key } = data;
+        const { orderId, price, currency, key } = data; // Use `price` if backend uses price
 
         const options = {
           key,
-          amount,
+          amount: price * 100, // amount in paise
           currency,
           name: "E-Learning Platform",
           description: `Payment for ${course.title}`,
           order_id: orderId,
+          prefill: {
+            name: user?.name || "Student User",
+            email: user?.email || "student@example.com",
+          },
+          theme: { color: "#3399cc" },
           handler: async (response) => {
             try {
               const verifyRes = await axios.post(
@@ -84,7 +82,7 @@ export default function useEnroll({ token, user, courseId }) {
 
               if (verifyRes.data.message.includes("success")) {
                 alert("✅ Payment successful, enrolled!");
-                await checkEnrollment(); // 🔄 auto-refresh enrollment
+                await checkEnrollment();
               } else {
                 alert("⚠️ Payment verification failed!");
               }
@@ -94,11 +92,22 @@ export default function useEnroll({ token, user, courseId }) {
               setLoading(false);
             }
           },
-          prefill: {
-            name: user?.name || "Student User",
-            email: user?.email || "student@example.com",
-          },
-          theme: { color: "#3399cc" },
+          modal: {
+            ondismiss: async () => {
+              alert("⚠️ Payment modal closed, payment not completed.");
+              // console.log("modal.ondismiss event triggered");
+              try {
+                await axios.post(
+                  `${BACK_URL}/api/enrollments/payment-failed`,
+                  { orderId, courseId: course._id },
+                  { headers: { Authorization: `Bearer ${token}` } }
+                );
+              } catch (error) {
+                console.error("Failed to update payment status on modal close:", error);
+              }
+              setLoading(false);
+            }
+          }
         };
 
         // Ensure Razorpay script loaded
@@ -107,6 +116,22 @@ export default function useEnroll({ token, user, courseId }) {
         }
 
         const rzp1 = new window.Razorpay(options);
+
+        // Additional payment failure handler
+        rzp1.on("payment.failed", async () => {
+          alert("⚠️ Payment was cancelled or failed.");
+          try {
+            await axios.post(
+              `${BACK_URL}/api/enrollments/payment-failed`,
+              { orderId, courseId: course._id },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+          } catch (error) {
+            console.error("Failed to update payment status on cancellation:", error);
+          }
+          setLoading(false);
+        });
+
         rzp1.open();
       }
     } catch (err) {

@@ -22,8 +22,11 @@ export default function MyCourses() {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
+        const data = res.data
+        const enrolledCourse = data.filter(item => item.status === "enrolled");
+
         console.log("Fetched courses:", res.data);
-        setCourses(res.data || []);
+        setCourses(enrolledCourse || []);
       })
       .catch((err) => {
         console.error("Failed to fetch courses:", err);
@@ -33,6 +36,8 @@ export default function MyCourses() {
         setLoading(false);
       });
   }, [token]);
+
+  // console.log(courses)
 
   if (loading) {
     return (
@@ -144,7 +149,7 @@ export default function MyCourses() {
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${Math.floor(Math.random() * 100)}%` }}
+                      // style={{ width: `${Math.floor(Math.random() * 100)}%` }}
                     ></div>
                   </div>
                   <p className="text-xs text-gray-500 mt-2">Progress</p>

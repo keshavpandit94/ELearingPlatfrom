@@ -4,7 +4,7 @@ import axios from "axios";
 import {
   BookOpen, Plus, User, Star, Clock, Play,
   Search, Filter, Grid3X3, List, ChevronRight,
-  Award, Eye
+  Eye
 } from "lucide-react";
 import useEnroll from "../../hooks/useEnroll"; 
 import BACK_URL from "../../api";
@@ -19,42 +19,41 @@ export default function Courses() {
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-  const { enroll, isLoading: enrolling } = useEnroll({ token});
+  const { enroll, isLoading: enrolling } = useEnroll({ token });
 
   // ✅ Fetch user + courses + enrolled
   useEffect(() => {
     if (!token) {
       setUser(null);
       return;
-    }
-    else{
+    } else {
       // fetch user info
       axios
-      .get(`${BACK_URL}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => {
-        setUser(res.data.user);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-      })
-      .catch(() => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        setUser(null);
-      });
+        .get(`${BACK_URL}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+        .then((res) => {
+          setUser(res.data.user);
+          localStorage.setItem("user", JSON.stringify(res.data.user));
+        })
+        .catch(() => {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setUser(null);
+        });
 
-    // fetch enrolled courses
-    axios
-      .get(`${BACK_URL}/api/enrollments/my-courses`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setEnrolledCourses(res.data || []);
-      })
-      .catch((err) => console.error("Failed to load enrollments:", err));
+      // fetch enrolled courses
+      axios
+        .get(`${BACK_URL}/api/enrollments/my-courses`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          setEnrolledCourses(res.data || []);
+        })
+        .catch((err) => console.error("Failed to load enrollments:", err));
     }
 
     setLoading(true);
 
-   // fetch all courses
+    // fetch all courses
     axios
       .get(`${BACK_URL}/api/courses`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -69,12 +68,13 @@ export default function Courses() {
       .finally(() => setLoading(false));
   }, [token]);
 
-  // ✅ check enrolled helper
-  const isEnrolled = (courseId) => {
-  return enrolledCourses.some((ec) => ec.course?._id === courseId);
-};
+  // ✅ get enrollment status for course
+  const getEnrollmentStatus = (courseId) => {
+    const record = enrolledCourses.find((ec) => ec.course?._id === courseId);
+    return record ? record.status : null; // enrolled | pending | null
+  };
 
-
+  // console.log(enrolledCourses)
 
   // ✅ case-insensitive search
   const filteredCourses = courses.filter((course) =>
@@ -163,12 +163,13 @@ export default function Courses() {
             }
           >
             {filteredCourses.map((c) => {
-              const alreadyEnrolled = isEnrolled(c._id);
+              const status = getEnrollmentStatus(c._id);
+
               return (
                 <div
                   key={c._id}
                   onClick={() =>
-                    alreadyEnrolled
+                    status === "enrolled"
                       ? navigate(`/continue/${c._id}`)
                       : navigate(`/courses/${c._id}`)
                   }
@@ -228,7 +229,7 @@ export default function Courses() {
 
                     {/* Actions */}
                     <div className="flex items-center justify-between">
-                      {alreadyEnrolled ? (
+                      {status === "enrolled" ? (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -237,6 +238,14 @@ export default function Courses() {
                           className="flex items-center gap-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-medium"
                         >
                           <Play className="w-4 h-4" /> Continue
+                        </button>
+                      ) : status === "pending" ? (
+                        <button
+                          disabled
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-1 bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm font-medium opacity-70 cursor-not-allowed"
+                        >
+                          <Play className="w-4 h-4" /> Pending Approval
                         </button>
                       ) : (
                         <button

@@ -1,12 +1,20 @@
 import { CheckCircle, Play } from "lucide-react";
 import useEnroll from "../hooks/useEnroll.js";
+import axios from "axios";
 
 export default function EnrollButton({ course, token, user,  }) {
   const { enroll, isEnrolled, loading } = useEnroll({ token, user, courseId: course._id });
 
-  console.log(token)
+  // console.log(token)
   // console.log(user)
     // console.log(isEnrolled)
+
+  // const checkEnrolled = () => {
+  //   axios.get()
+  //   .then()
+  //   .catch()
+
+  // }
   return (
     <button
       onClick={() => enroll(course)}
