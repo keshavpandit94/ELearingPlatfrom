@@ -42,7 +42,7 @@ export default function useEnroll({ token, user, courseId }) {
     try {
       // Step 1: Attempt enrollment
       const res = await axios.post(
-        "/api/enrollments",
+        `${BACK_URL}/api/enrollments`,
         { courseId: course._id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
